@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flash_chat/components/rounded_button.dart';
 import 'package:flash_chat/constants.dart';
+import 'package:flash_chat/screens/chat_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String id = 'login_screen';
@@ -10,6 +12,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _auth = FirebaseAuth.instance;
+  String email;
+  String password;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.black),
               onChanged: (value) {
-                //Do something with the user input.
+                email = value;
               },
               decoration: kInputDecoration,
             ),
@@ -47,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
               style: TextStyle(color: Colors.black),
               onChanged: (value) {
-                //Do something with the user input.
+                password = value;
               },
               decoration:
                   kInputDecoration.copyWith(hintText: 'Enter your password'),
@@ -58,8 +64,23 @@ class _LoginScreenState extends State<LoginScreen> {
             RoundedButton(
                 color: Colors.lightBlueAccent,
                 text: 'Log In',
-                onPressed: () {
-                  //TODO add later
+                onPressed: () async {
+                  try {
+                    UserCredential userCredential =
+                        await _auth.signInWithEmailAndPassword(
+                      email: email,
+                      password: password,
+                    );
+                    if (userCredential != null) {
+                      Navigator.pushNamed(context, ChatScreen.id);
+                    }
+                  } on FirebaseAuthException catch (e) {
+                    if (e.code == 'user-not-found') {
+                      print('No user found for that email.');
+                    } else if (e.code == 'wrong-password') {
+                      print('Wrong password provided for that user.');
+                    }
+                  }
                 }),
           ],
         ),
