@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'message_bubble.dart';
+import 'package:intl/intl.dart';
 
 class MessagesStream extends StatelessWidget {
   MessagesStream({@required this.loggedInUser});
@@ -11,7 +12,10 @@ class MessagesStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream: _firestore.collection('messages').snapshots(),
+        stream: _firestore
+            .collection('messages')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(
@@ -25,11 +29,15 @@ class MessagesStream extends StatelessWidget {
             final messageText = message.data()['text'];
             final messageSenderEmail = message.data()['sender'];
             isMe = loggedInUser == messageSenderEmail ? true : false;
+            var timestamp = DateTime.fromMillisecondsSinceEpoch(
+                message.data()['timestamp']);
+            String formattedTime = DateFormat.Hm().format(timestamp);
 
             final messageBubble = MessageBubble(
                 messageText: messageText,
                 messageSender: messageSenderEmail,
-                isMe: isMe);
+                isMe: isMe,
+                formattedTime: formattedTime);
             messageBubbles.add(messageBubble);
           }
           return Expanded(
